@@ -30,12 +30,12 @@ export async function login() {
         const redirectUri = Linking.createURL('/'); // parameter -> path
 
         // fetching a token provided as a response from OAuthGoogle 
-        const response = await account.createOAuth2Token(OAuthProvider.Google, redirectUri);
+        const response = await account.createOAuth2Token(OAuthProvider.Google, redirectUri);  // parameters -> provider, redirectURL
 
         // If response is returned as null
         if (!response) throw new Error('Failed to Log in!');
 
-        // If success, creating a session with a Browswer for logging in 
+        // If success, creating a session with a Browser for logging in 
         const browserResult = await WebBrowser.openAuthSessionAsync(
             response.toString(),
             redirectUri
@@ -58,11 +58,40 @@ export async function login() {
         const session = await account.createSession(userId, secret);
 
         // If session creation remains unsuccessful
-        if (!session) throw new Error('Failed to Log in!');
+        if (!session) throw new Error('Failed to create a session!');
 
         return true; // only when session is successfully created
     } catch (error) {
-        console.log("Error logging in : ", error);
+        console.error(error);
         return false;
+    }
+}
+
+export async function logout() {
+    try {
+        await account.deleteSession('current'); // deletes the current session of the user
+        return true;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export async function getUser() {
+    try {
+        const user = await account.get();  // returns currently logged-in user
+
+        // If user found
+        if (user.$id) {
+            const userAvatar = avatar.getInitials(user.name); // fetching avatar image
+
+            return {
+                ...user,
+                avatar: userAvatar.toString()  // appending it to the response object with user details
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return null;
     }
 }
